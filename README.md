@@ -1,5 +1,5 @@
 # DCD-Chrome-Advanced-Search
-A tool for extending Google Chrome to work on Diamond Comics Distributions internal search, including advanced search terms.
+A tool for extending Google Chrome's address bar search to work on Diamond Comics Distributions internal search, including advanced search terms.
 
 # HowTo:
 1. In google chrome settings under site search, add a new search with the url https://retailerservices.diamondcomics.com/Reorder/Reorder?&start=tabContentItemSearch?tmpayload=%s
