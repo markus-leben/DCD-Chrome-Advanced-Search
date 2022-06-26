@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DCD Searchscript
 // @namespace    https://github.com/markus-leben/DCD-Chrome-Advanced-Search/
-// @version      1.0.0
+// @version      1.0.1
 // @description  A script designed to be used with Chrome Site Search to allow you to use the full Diamond Comics advanced search from your address bar
 // @author       Markus Leben
 // @match        https://retailerservices.diamondcomics.com/Reorder/Reorder?start=tabContentItemSearch?tmpayload=*
@@ -27,6 +27,61 @@ const term_dict = { //might've gone a little hog wild with the term shortening. 
     "afterdate":"aft",
 }
 
+const search_term_id_dict = { //used for setting the functional parts of filling each bit of the forms
+    //search words
+    "searchwords":{"action":"set", "locator":"getElementById", "element_trait":"SearchWords"},
+    //category
+    "cat":{"action":"checkbox", "locator":"getElementsByName", "element_trait":"Category"},
+    //batch (i.e. previews it was in)
+    "bat":{"action":"dropdown","locator":"getElementById", "element_trait":"SelectedBatch"}, //apparently batch codes are case insensitive, maybe I won't have to do text manip at all
+    //vendor
+    "v":{"action":"set", "locator":"getElementById", "element_trait":"VendorName"},
+    //vendor item no-- TBH I have no idea what this is or where vendors would list their internal item numbers
+    "vno":{"action":"set", "locator":"getElementById", "element_trait":"VendorIdNo"},
+    //brand code, TODO: Build serious translation dictionaries for brand code search terms
+    "bra":{"action":"dropdown","locator":"getElementById", "element_trait":"ddlEnteredFamily"},
+    //genre code, TODO: Build serious translation dictionaries for genre code search terms T-T
+    "gen":{"action":"dropdown","locator":"getElementById", "element_trait":"ddlGenreCode"},
+    //date stuff goes here
+    "aft":{"action":"date","locator":"getElementById", "element_trait":"ReleasedAfterDate"},
+    "bef":{"action":"date","locator":"getElementById", "element_trait":"ReleasedBeforeDate"},
+    //note: separating artist, writer, and cover into 3 separate creater fields here. possible TODO: come up with more complex way to parse creators
+    //artist, but really just creator 1
+    "a":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName"},
+    //cover artist, but really just creator 2
+    "ca":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName2"},
+    //writer, but really just creator 3
+    "w":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName3"}, //shame on them for not counting by zero
+};
+
+const cat_dict = {
+    "all": [],
+    "comics": [],
+    "graphic novels/trade paperbacks": [
+        "graphic novels", "gns", "trade paperbacks", "tps"],
+    "magazines": ["zines"],
+    "books": [
+        "light novels", "lns"],
+    "games": [
+        "board games", "puzzles", "rpgs"],
+    "trading cards": [
+        "card games", "cards", "tcgs", "ccgs", "sports cards", "collectible cards"],
+    "novelties: comic": [], //might wanna put things into both of the novelties arrs in the future
+    "novelties: non-comic": [],
+    "apparel": [
+        "clothes", "shirts", "hats", "clothing"],
+    "toys and models": [
+        "afs", "action figures", "models", "toys", "figs", "statues", "dolls"],
+    "supplies: cards": [
+        "sleeves", "deckboxes"],
+    "supplies: comics": [],
+    "retailer sales tools": [
+        "fcbd", "previews"],
+    "diamond publications": [],
+    "posters": [],
+    "audio/visual products": [],
+}
+
 const text_manip_dict = { //dictionary of terms to do text manipulation on prior to feeding in
 }
 
@@ -50,33 +105,6 @@ console.log(JSON.stringify(search_dict))
 
 //clear fields
 document.getElementsByClassName("clearSearchFields")[0].click();
-
-
-const search_term_id_dict = {
-    //search words
-    "searchwords":{"action":"set", "locator":"getElementById", "element_trait":"SearchWords"},
-    //category
-    //batch (i.e. previews it was in)
-    "bat":{"action":"dropdown","locator":"getElementById", "element_trait":"SelectedBatch"}, //apparently batch codes are case insensitive, maybe I won't have to do text manip at all
-    //vendor
-    "v":{"action":"set", "locator":"getElementById", "element_trait":"VendorName"},
-    //vendor item no-- TBH I have no idea what this is or where vendors would list their internal item numbers
-    "vno":{"action":"set", "locator":"getElementById", "element_trait":"VendorIdNo"},
-    //brand code, TODO: Build serious translation dictionaries for brand code search terms
-    "bra":{"action":"dropdown","locator":"getElementById", "element_trait":"ddlEnteredFamily"},
-    //genre code, TODO: Build serious translation dictionaries for genre code search terms T-T
-    "gen":{"action":"dropdown","locator":"getElementById", "element_trait":"ddlGenreCode"},
-    //date stuff goes here
-    "aft":{"action":"date","locator":"getElementById", "element_trait":"ReleasedAfterDate"},
-    "bef":{"action":"date","locator":"getElementById", "element_trait":"ReleasedBeforeDate"},
-    //note: separating artist, writer, and cover into 3 separate creater fields here. possible TODO: come up with more complex way to parse creators
-    //artist, but really just creator 1
-    "a":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName"},
-    //cover artist, but really just creator 2
-    "ca":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName2"},
-    //writer, but really just creator 3
-    "w":{"action":"set", "locator":"getElementById", "element_trait":"CreatorName3"}, //shame on them for not counting by zero
-};
 
 
 for (const key in search_term_id_dict){
@@ -122,11 +150,23 @@ for (const key in search_term_id_dict){
             console.log(JSON.stringify(search_dict[key]));
             document[search_term_id_dict[key].locator](search_term_id_dict[key].element_trait).value = date;
         }
+        if (search_term_id_dict[key].action == "checkbox"){
+            let boxes = document[search_term_id_dict[key].locator](search_term_id_dict[key].element_trait);
+            boxes[0].click();
+            for (const box of boxes){
+                console.log(JSON.stringify(box.nextElementSibling.textContent.toLowerCase()));
+                console.log(JSON.stringify(cat_dict[box.nextElementSibling.textContent.toLowerCase()]));
+                if (box.nextElementSibling.textContent.toLowerCase() == search_dict[key].toLowerCase()||
+                    box.nextElementSibling.textContent.toLowerCase() == search_dict[key].toLowerCase()+'s'||
+                    cat_dict[box.nextElementSibling.textContent.toLowerCase()].includes(search_dict[key].toLowerCase())||
+                    cat_dict[box.nextElementSibling.textContent.toLowerCase()].includes(search_dict[key].toLowerCase() + 's')){
+
+                    box.click();
+                }
+            }
+        }
     }
 };
 
 //click search button
 document.getElementById("btnSearch").click();
-
-
-
