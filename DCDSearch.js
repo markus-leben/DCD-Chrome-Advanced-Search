@@ -4,13 +4,13 @@
 // @version      1.0.0
 // @description  A script designed to be used with Chrome Site Search to allow you to use the full Diamond Comics advanced search from your address bar
 // @author       Markus Leben
-// @match        https://retailerservices.diamondcomics.com/Reorder/Reorder?&start=tabContentItemSearch?tmpayload=*
+// @match        https://retailerservices.diamondcomics.com/Reorder/Reorder?start=tabContentItemSearch?tmpayload=*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=diamondcomics.com
 // @grant        none
 // ==/UserScript==
 
 let cururl = window.location.href;
-let payload = decodeURIComponent(cururl.replace("https://retailerservices.diamondcomics.com/Reorder/Reorder?&start=tabContentItemSearch?tmpayload=", "")).split("+");
+let payload = decodeURIComponent(cururl.replace("https://retailerservices.diamondcomics.com/Reorder/Reorder?start=tabContentItemSearch?tmpayload=", "")).split("+");
 let search_dict = {};
 
 const term_dict = { //might've gone a little hog wild with the term shortening. Scryfall card golf might've given me a brain worm.
