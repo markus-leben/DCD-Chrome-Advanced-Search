@@ -19,6 +19,7 @@ const term_dict = { //might've gone a little hog wild with the term shortening. 
     "writer":"w",
     "batch":"bat",
     "previews":"bat",
+    "category":"cat",
     "brand":"bra",
     "genre":"gen",
     "before":"bef",
